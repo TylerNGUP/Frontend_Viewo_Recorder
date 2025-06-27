@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>极简录屏工具</title>
+</head>
+<body>
+    <video id="preview" autoplay muted></video>
+    <video id="recording" controls></video>
+    <button id="startBtn">开始录制</button>
+    <button id="pauseBtn" disabled>暂停录制</button>
+    <button id="resumeBtn" disabled>继续录制</button>
+    <button id="stopBtn" disabled>停止录制</button>
+    <button id="downloadBtn" disabled>下载录制</button>
+    <label>
+        <input type="checkbox" id="micCheckbox" checked>
+        录制麦克风声音
+    </label>
+
+    <script>
+        const preview = document.getElementById('preview');
+        const recording = document.getElementById('recording');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resumeBtn = document.getElementById('resumeBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const micCheckbox = document.getElementById('micCheckbox');
+        
+        let mediaRecorder;
+        let recordedChunks = [];
+        let stream;
+        let micStream;
+
+        startBtn.addEventListener('click', async () => {
+            try {
+                // 获取屏幕流
+                stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: true,
+                    audio: micCheckbox.checked // 如果勾选麦克风，则同时捕获系统音频
+                });
+                
+                // 如果勾选了麦克风，则获取麦克风流
+                if (micCheckbox.checked) {
+                    micStream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true
+                        },
+                        video: false
+                    });
+                    
+                    // 创建AudioContext用于合并音频
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    // 创建音频源节点
+                    const screenSource = audioContext.createMediaStreamSource(stream);
+                    const micSource = audioContext.createMediaStreamSource(micStream);
+                    
+                    // 创建混合目标节点
+                    const destination = audioContext.createMediaStreamDestination();
+                    
+                    // 连接音频源到目标
+                    screenSource.connect(destination);
+                    micSource.connect(destination);
+                    
+                    // 创建新的流，包含屏幕视频和混合音频
+                    const combinedStream = new MediaStream([
+                        ...stream.getVideoTracks(),
+                        ...destination.stream.getAudioTracks()
+                    ]);
+                    
+                    // 使用合并后的流进行录制
+                    mediaRecorder = new MediaRecorder(combinedStream);
+                } else {
+                    // 如果未勾选麦克风，则只使用屏幕流
+                    mediaRecorder = new MediaRecorder(stream);
+                }
+                
+                preview.srcObject = stream;
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                    recording.src = URL.createObjectURL(blob);
+                    downloadBtn.disabled = false;
+                    
+                    // 停止所有流
+                    if (stream) {
+                        stream.getTracks().forEach(track => track.stop());
+                    }
+                    if (micStream) {
+                        micStream.getTracks().forEach(track => track.stop());
+                    }
+                };
+                
+                mediaRecorder.start();
+                startBtn.disabled = true;
+                pauseBtn.disabled = false;
+                stopBtn.disabled = false;
+            } catch (error) {
+                console.error('录制错误:', error);
+                alert(`无法开始录制: ${error.message}`);
+                
+                // 重置UI状态
+                startBtn.disabled = false;
+                pauseBtn.disabled = true;
+                resumeBtn.disabled = true;
+                stopBtn.disabled = true;
+                
+                // 停止所有流
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                if (micStream) {
+                    micStream.getTracks().forEach(track => track.stop());
+                }
+            }
+        });
+
+        pauseBtn.addEventListener('click', () => {
+            mediaRecorder.pause();
+            pauseBtn.disabled = true;
+            resumeBtn.disabled = false;
+        });
+
+        resumeBtn.addEventListener('click', () => {
+            mediaRecorder.resume();
+            pauseBtn.disabled = false;
+            resumeBtn.disabled = true;
+        });
+
+        stopBtn.addEventListener('click', () => {
+            mediaRecorder.stop();
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            resumeBtn.disabled = true;
+            stopBtn.disabled = true;
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'recording.webm';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+    </script>
+</body>
+</html>    
