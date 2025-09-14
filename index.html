@@ -1,205 +1,349 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Record</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rec</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #00f7ff;
+            --secondary: #ff00d6;
+            --accent: #00ff66;
+            --dark: #0a0e17;
+            --darker: #050811;
+        }
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            color: #fff;
             min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
         }
-        .app-container {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            padding: 28px;
-            margin-top: 20px;
+        
+        .neon-text {
+            text-shadow: 0 0 5px var(--primary), 0 0 10px var(--primary), 0 0 15px var(--primary), 0 0 20px var(--primary);
+            color: #fff;
         }
+        
+        .glow-border {
+            border: 1px solid rgba(0, 247, 255, 0.3);
+            box-shadow: 0 0 10px rgba(0, 247, 255, 0.5), inset 0 0 10px rgba(0, 247, 255, 0.2);
+        }
+        
         .video-container {
-            background: linear-gradient(145deg, #2c3e50, #1a2530);
+            background: rgba(0, 0, 0, 0.7);
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s ease;
-            margin-bottom: 24px;
+            position: relative;
+            margin-bottom: 25px;
+            width: 100%;
         }
-        .video-container:hover {
-            transform: translateY(-2px);
+        
+        .video-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 12px;
+            padding: 2px;
+            background: linear-gradient(45deg, var(--primary), var(--secondary), var(--accent), var(--primary));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
         }
+        
         video {
             width: 100%;
             max-height: 600px;
             display: block;
         }
+        
         .control-panel {
-            margin-top: 28px;
+            margin-top: 30px;
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 15px;
             align-items: center;
-            background: #f8fafc;
+            background: rgba(10, 14, 23, 0.7);
             padding: 20px;
-            border-radius: 14px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
         }
+        
         button {
             transition: all 0.3s ease;
-            border-radius: 10px;
+            border-radius: 12px;
             font-weight: 600;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             position: relative;
             overflow: hidden;
+            border: none;
+            background: linear-gradient(45deg, rgba(0, 247, 255, 0.2), rgba(255, 0, 214, 0.2));
+            backdrop-filter: blur(5px);
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 0 15px rgba(0, 247, 255, 0.3);
         }
-        button:after {
+        
+        button::before {
             content: '';
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 5px;
-            height: 5px;
-            background: rgba(255, 255, 255, 0.5);
-            opacity: 0;
-            border-radius: 100%;
-            transform: scale(1, 1) translate(-50%);
-            transform-origin: 50% 50%;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
         }
-        button:focus:not(:active)::after {
-            animation: ripple 1s ease-out;
+        
+        button:hover::before {
+            left: 100%;
         }
-        @keyframes ripple {
-            0% {
-                transform: scale(0, 0);
-                opacity: 1;
-            }
-            20% {
-                transform: scale(25, 25);
-                opacity: 1;
-            }
-            100% {
-                opacity: 0;
-                transform: scale(40, 40);
-            }
-        }
+        
         button:disabled {
-            opacity: 0.6;
+            opacity: 0.5;
             cursor: not-allowed;
             transform: none !important;
             box-shadow: none;
         }
+        
         button:not(:disabled):hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 0 20px rgba(0, 247, 255, 0.5);
         }
+        
+        #startBtn { background: linear-gradient(45deg, rgba(0, 247, 255, 0.3), rgba(0, 255, 102, 0.3)); }
+        #pauseBtn { background: linear-gradient(45deg, rgba(255, 196, 0, 0.3), rgba(255, 145, 0, 0.3)); }
+        #resumeBtn { background: linear-gradient(45deg, rgba(0, 149, 255, 0.3), rgba(0, 81, 255, 0.3)); }
+        #stopBtn { background: linear-gradient(45deg, rgba(255, 0, 0, 0.3), rgba(255, 0, 106, 0.3)); }
+        #downloadBtn { background: linear-gradient(45deg, rgba(187, 0, 255, 0.3), rgba(106, 0, 255, 0.3)); }
+        
         .speed-control {
             margin-top: 20px;
             display: flex;
             align-items: center;
             gap: 12px;
-            background: #f8fafc;
+            background: rgba(10, 14, 23, 0.7);
             padding: 16px 20px;
-            border-radius: 14px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
         }
+        
         select {
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            transition: all 0.2s ease;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid var(--primary);
+            padding: 8px 12px;
+            box-shadow: 0 0 10px rgba(0, 247, 255, 0.3);
         }
-        select:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
-        }
+        
         label {
             transition: all 0.2s ease;
             cursor: pointer;
         }
+        
         h1 {
-            color: #2d3748;
-            font-weight: 800;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
             text-align: center;
             position: relative;
-            padding-bottom: 12px;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
         }
-        h1:after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            height: 4px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            border-radius: 2px;
-        }
+        
         .checkbox-wrapper {
             display: flex;
             align-items: center;
             justify-content: center;
         }
+        
         input[type="checkbox"] {
             -webkit-appearance: none;
             appearance: none;
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
             border-radius: 6px;
-            margin-right: 8px;
-            border: 2px solid #cbd5e0;
+            margin-right: 10px;
+            border: 2px solid var(--primary);
             outline: none;
             cursor: pointer;
             position: relative;
             transition: all 0.2s ease;
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 10px rgba(0, 247, 255, 0.3);
         }
+        
         input[type="checkbox"]:checked {
-            background: #667eea;
-            border-color: #667eea;
+            background: var(--primary);
+            box-shadow: 0 0 15px var(--primary);
         }
+        
         input[type="checkbox"]:checked::before {
             content: '✓';
             position: absolute;
-            color: white;
+            color: black;
             font-size: 14px;
+            font-weight: bold;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
         }
+        
         .video-label {
             color: white;
-            padding: 8px 16px;
+            padding: 6px 15px;
             font-size: 14px;
             font-weight: 600;
             display: inline-block;
             border-radius: 0 0 8px 0;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10;
+        }
+        
+        .pulse {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 0 rgba(0, 255, 102, 0.4);
+            animation: pulse 2s infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 255, 102, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(0, 255, 102, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 255, 102, 0);
+            }
+        }
+        
+        .recording-indicator {
+            display: flex;
+            align-items: center;
+            margin-left: auto;
+            padding: 6px 12px;
+            background: rgba(255, 0, 0, 0.2);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .fullscreen-btn {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid var(--primary);
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+            z-index: 20;
+            transition: all 0.3s ease;
+        }
+        
+        .fullscreen-btn:hover {
+            background: var(--primary);
+            color: black;
+        }
+        
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .video-wrapper {
+            position: relative;
+        }
+        
+        /* 全屏样式 */
+        .video-container.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            border-radius: 0;
+            margin-bottom: 0;
+        }
+        
+        .video-container.fullscreen video {
+            max-height: 100vh;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .video-container.fullscreen::before {
+            display: none;
+        }
+        
+        .video-container.fullscreen .video-label {
+            border-radius: 0;
         }
     </style>
 </head>
 <body>
-    <h1 class="text-3xl font-bold mb-6">屏幕录制工具</h1>
+    <div id="particles-js"></div>
     
     <div class="app-container">
-        <div class="mb-8">
+        <h1 class="text-4xl neon-text">Rec</h1>
+        
+        <div class="video-wrapper">
             <div class="video-label">实时预览</div>
-            <div class="video-container">
+            <div class="video-container" id="previewContainer">
                 <video id="preview" autoplay muted></video>
+                <button class="fullscreen-btn" onclick="toggleFullscreen('previewContainer')">
+                    <i class="fa fa-arrows-alt"></i>
+                </button>
             </div>
         </div>
         
-        <div class="mb-8">
+        <div class="video-wrapper">
             <div class="video-label">录制回放</div>
-            <div class="video-container">
+            <div class="video-container" id="recordingContainer">
                 <video id="recording" controls></video>
+                <button class="fullscreen-btn" onclick="toggleFullscreen('recordingContainer')">
+                    <i class="fa fa-arrows-alt"></i>
+                </button>
             </div>
         </div>
         
-        <div class="speed-control">
-            <label for="playbackSpeed" class="text-gray-700 font-medium">播放速度:</label>
-            <select id="playbackSpeed" class="border rounded p-2 bg-white focus:border-blue-400">
+        <div class="speed-control glow-border">
+            <label for="playbackSpeed" class="text-xl font-medium">播放速度:</label>
+            <select id="playbackSpeed" class="border rounded p-2 bg-white">
                 <option value="0.5">0.5x</option>
                 <option value="0.75">0.75x</option>
                 <option value="1" selected>1x</option>
@@ -210,25 +354,30 @@
             </select>
         </div>
         
-        <div class="control-panel">
-            <button id="startBtn" class="bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white px-5 py-2.5 rounded flex items-center gap-2">
+        <div class="control-panel glow-border">
+            <button id="startBtn" class="px-5 py-3 rounded flex items-center gap-2">
                 <i class="fa fa-play"></i> 开始录制
             </button>
-            <button id="pauseBtn" disabled class="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-white px-5 py-2.5 rounded flex items-center gap-2">
+            <button id="pauseBtn" disabled class="px-5 py-3 rounded flex items-center gap-2">
                 <i class="fa fa-pause"></i> 暂停录制
             </button>
-            <button id="resumeBtn" disabled class="bg-gradient-to-r from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white px-5 py-2.5 rounded flex items-center gap-2">
+            <button id="resumeBtn" disabled class="px-5 py-3 rounded flex items-center gap-2">
                 <i class="fa fa-play"></i> 继续录制
             </button>
-            <button id="stopBtn" disabled class="bg-gradient-to-r from-red-400 to-red-600 hover:from-red-500 hover:to-red-700 text-white px-5 py-2.5 rounded flex items-center gap-2">
+            <button id="stopBtn" disabled class="px-5 py-3 rounded flex items-center gap-2">
                 <i class="fa fa-stop"></i> 停止录制
             </button>
-            <button id="downloadBtn" disabled class="bg-gradient-to-r from-purple-400 to-purple-600 hover:from-purple-500 hover:to-purple-700 text-white px-5 py-2.5 rounded flex items-center gap-2">
+            <button id="downloadBtn" disabled class="px-5 py-3 rounded flex items-center gap-2">
                 <i class="fa fa-download"></i> 下载录制
             </button>
             
+            <div class="recording-indicator" id="recIndicator" style="display: none;">
+                <div class="pulse"></div>
+                <span>录制中</span>
+            </div>
+            
             <div class="ml-auto checkbox-wrapper">
-                <label class="flex items-center gap-2 text-gray-700 font-medium cursor-pointer">
+                <label class="flex items-center gap-2 text-lg font-medium cursor-pointer">
                     <input type="checkbox" id="micCheckbox" checked class="rounded text-blue-500">
                     录制麦克风声音
                 </label>
@@ -236,8 +385,44 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script>
-        // JavaScript代码保持不变
+        // 初始化粒子背景
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: "#00f7ff" },
+                shape: { type: "circle" },
+                opacity: { value: 0.5, random: true },
+                size: { value: 3, random: true },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: "#00f7ff",
+                    opacity: 0.4,
+                    width: 1
+                },
+                move: {
+                    enable: true,
+                    speed: 2,
+                    direction: "none",
+                    random: true,
+                    straight: false,
+                    out_mode: "out",
+                    bounce: false
+                }
+            },
+            interactivity: {
+                detect_on: "canvas",
+                events: {
+                    onhover: { enable: true, mode: "repulse" },
+                    onclick: { enable: true, mode: "push" },
+                    resize: true
+                }
+            },
+            retina_detect: true
+        });
+        
         const preview = document.getElementById('preview');
         const recording = document.getElementById('recording');
         const startBtn = document.getElementById('startBtn');
@@ -247,6 +432,7 @@
         const downloadBtn = document.getElementById('downloadBtn');
         const micCheckbox = document.getElementById('micCheckbox');
         const playbackSpeed = document.getElementById('playbackSpeed');
+        const recIndicator = document.getElementById('recIndicator');
         
         let mediaRecorder;
         let recordedChunks = [];
@@ -258,6 +444,46 @@
         playbackSpeed.addEventListener('change', () => {
             recording.playbackRate = parseFloat(playbackSpeed.value);
         });
+
+        // 全屏功能
+        function toggleFullscreen(containerId) {
+            const container = document.getElementById(containerId);
+            if (!document.fullscreenElement) {
+                container.classList.add('fullscreen');
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                } else if (container.msRequestFullscreen) {
+                    container.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+                container.classList.remove('fullscreen');
+            }
+        }
+
+        // 退出全屏时恢复样式
+        document.addEventListener('fullscreenchange', exitHandler);
+        document.addEventListener('webkitfullscreenchange', exitHandler);
+        document.addEventListener('mozfullscreenchange', exitHandler);
+        document.addEventListener('MSFullscreenChange', exitHandler);
+
+        function exitHandler() {
+            if (!document.fullscreenElement && 
+                !document.webkitFullscreenElement && 
+                !document.mozFullScreenElement &&
+                !document.msFullscreenElement) {
+                document.getElementById('previewContainer').classList.remove('fullscreen');
+                document.getElementById('recordingContainer').classList.remove('fullscreen');
+            }
+        }
 
         startBtn.addEventListener('click', async () => {
             try {
@@ -336,6 +562,9 @@
                     
                     // 停止所有流
                     stopAllStreams();
+                    
+                    // 隐藏录制指示器
+                    recIndicator.style.display = 'none';
                 };
                 
                 // 开始录制
@@ -346,6 +575,7 @@
                 pauseBtn.disabled = false;
                 stopBtn.disabled = false;
                 downloadBtn.disabled = true;
+                recIndicator.style.display = 'flex';
                 
             } catch (error) {
                 console.error('录制错误:', error);
@@ -356,6 +586,9 @@
                 
                 // 停止所有流
                 stopAllStreams();
+                
+                // 隐藏录制指示器
+                recIndicator.style.display = 'none';
             }
         });
 
@@ -363,12 +596,14 @@
             mediaRecorder.pause();
             pauseBtn.disabled = true;
             resumeBtn.disabled = false;
+            recIndicator.style.display = 'none';
         });
 
         resumeBtn.addEventListener('click', () => {
             mediaRecorder.resume();
             pauseBtn.disabled = false;
             resumeBtn.disabled = true;
+            recIndicator.style.display = 'flex';
         });
 
         stopBtn.addEventListener('click', () => {
@@ -379,6 +614,7 @@
             pauseBtn.disabled = true;
             resumeBtn.disabled = true;
             stopBtn.disabled = true;
+            recIndicator.style.display = 'none';
         });
 
         downloadBtn.addEventListener('click', () => {
