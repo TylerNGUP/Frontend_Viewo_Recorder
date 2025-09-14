@@ -2,20 +2,95 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>极简录屏工具</title>
+    <title>Record</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .video-container {
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        video {
+            width: 100%;
+            max-height: 600px;
+        }
+        .control-panel {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        button {
+            transition: all 0.2s ease;
+        }
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .speed-control {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+    </style>
 </head>
 <body>
-    <video id="preview" autoplay muted></video>
-    <video id="recording" controls></video>
-    <button id="startBtn">开始录制</button>
-    <button id="pauseBtn" disabled>暂停录制</button>
-    <button id="resumeBtn" disabled>继续录制</button>
-    <button id="stopBtn" disabled>停止录制</button>
-    <button id="downloadBtn" disabled>下载录制</button>
-    <label>
-        <input type="checkbox" id="micCheckbox" checked>
-        录制麦克风声音
-    </label>
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">极简录屏工具</h1>
+    
+    <div class="video-container mb-4">
+        <video id="preview" autoplay muted></video>
+    </div>
+    
+    <div class="video-container mb-4">
+        <video id="recording" controls></video>
+    </div>
+    
+    <div class="speed-control">
+        <label for="playbackSpeed" class="text-gray-700">播放速度:</label>
+        <select id="playbackSpeed" class="border rounded p-2 bg-white">
+            <option value="0.5">0.5x</option>
+            <option value="0.75">0.75x</option>
+            <option value="1" selected>1x</option>
+            <option value="1.25">1.25x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2x</option>
+            <option value="3">3x</option>
+        </select>
+    </div>
+    
+    <div class="control-panel">
+        <button id="startBtn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center gap-2">
+            <i class="fa fa-play"></i> 开始录制
+        </button>
+        <button id="pauseBtn" disabled class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded flex items-center gap-2">
+            <i class="fa fa-pause"></i> 暂停录制
+        </button>
+        <button id="resumeBtn" disabled class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2">
+            <i class="fa fa-play"></i> 继续录制
+        </button>
+        <button id="stopBtn" disabled class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded flex items-center gap-2">
+            <i class="fa fa-stop"></i> 停止录制
+        </button>
+        <button id="downloadBtn" disabled class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded flex items-center gap-2">
+            <i class="fa fa-download"></i> 下载录制
+        </button>
+        
+        <label class="ml-auto flex items-center gap-2 text-gray-700">
+            <input type="checkbox" id="micCheckbox" checked class="rounded text-blue-500">
+            录制麦克风声音
+        </label>
+    </div>
 
     <script>
         const preview = document.getElementById('preview');
@@ -26,59 +101,77 @@
         const stopBtn = document.getElementById('stopBtn');
         const downloadBtn = document.getElementById('downloadBtn');
         const micCheckbox = document.getElementById('micCheckbox');
+        const playbackSpeed = document.getElementById('playbackSpeed');
         
         let mediaRecorder;
         let recordedChunks = [];
         let stream;
         let micStream;
+        let audioContext;
+        
+        // 设置播放速度
+        playbackSpeed.addEventListener('change', () => {
+            recording.playbackRate = parseFloat(playbackSpeed.value);
+        });
 
         startBtn.addEventListener('click', async () => {
             try {
-                // 获取屏幕流
+                // 重置之前的录制数据
+                recordedChunks = [];
+                
+                // 获取屏幕流 - 仅视频，音频将单独处理
                 stream = await navigator.mediaDevices.getDisplayMedia({
-                    video: true,
-                    audio: micCheckbox.checked // 如果勾选麦克风，则同时捕获系统音频
+                    video: {
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 },
+                        frameRate: { ideal: 30 }
+                    },
+                    audio: false // 不直接从屏幕捕获音频，后面单独处理
                 });
+                
+                // 创建媒体流数组，至少包含视频轨道
+                let mediaStreams = [stream];
                 
                 // 如果勾选了麦克风，则获取麦克风流
                 if (micCheckbox.checked) {
                     micStream = await navigator.mediaDevices.getUserMedia({
                         audio: {
                             echoCancellation: true,
-                            noiseSuppression: true
+                            noiseSuppression: true,
+                            sampleRate: 44100
                         },
                         video: false
                     });
-                    
-                    // 创建AudioContext用于合并音频
-                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    
-                    // 创建音频源节点
-                    const screenSource = audioContext.createMediaStreamSource(stream);
-                    const micSource = audioContext.createMediaStreamSource(micStream);
-                    
-                    // 创建混合目标节点
-                    const destination = audioContext.createMediaStreamDestination();
-                    
-                    // 连接音频源到目标
-                    screenSource.connect(destination);
-                    micSource.connect(destination);
-                    
-                    // 创建新的流，包含屏幕视频和混合音频
-                    const combinedStream = new MediaStream([
-                        ...stream.getVideoTracks(),
-                        ...destination.stream.getAudioTracks()
-                    ]);
-                    
-                    // 使用合并后的流进行录制
-                    mediaRecorder = new MediaRecorder(combinedStream);
-                } else {
-                    // 如果未勾选麦克风，则只使用屏幕流
-                    mediaRecorder = new MediaRecorder(stream);
+                    mediaStreams.push(micStream);
                 }
                 
+                // 合并所有流
+                const combinedStream = new MediaStream();
+                mediaStreams.forEach(ms => {
+                    ms.getTracks().forEach(track => {
+                        combinedStream.addTrack(track);
+                    });
+                });
+                
+                // 检测浏览器支持的视频格式
+                const mimeType = MediaRecorder.isTypeSupported('video/mp4') 
+                    ? 'video/mp4' 
+                    : 'video/webm;codecs=vp9,opus';
+                
+                // 配置录制参数以确保更好的兼容性
+                const options = {
+                    mimeType: mimeType,
+                    videoBitsPerSecond: 5000000, // 5Mbps
+                    audioBitsPerSecond: 128000,  // 128kbps
+                };
+                
+                // 创建媒体录制器
+                mediaRecorder = new MediaRecorder(combinedStream, options);
+                
+                // 显示预览
                 preview.srcObject = stream;
                 
+                // 处理录制数据
                 mediaRecorder.ondataavailable = (event) => {
                     if (event.data.size > 0) {
                         recordedChunks.push(event.data);
@@ -86,40 +179,38 @@
                 };
                 
                 mediaRecorder.onstop = () => {
-                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                    recording.src = URL.createObjectURL(blob);
-                    downloadBtn.disabled = false;
+                    // 创建视频 blob
+                    const blob = new Blob(recordedChunks, { type: mimeType });
+                    const videoUrl = URL.createObjectURL(blob);
+                    
+                    // 设置录制视频
+                    recording.src = videoUrl;
+                    recording.onloadedmetadata = () => {
+                        downloadBtn.disabled = false;
+                    };
                     
                     // 停止所有流
-                    if (stream) {
-                        stream.getTracks().forEach(track => track.stop());
-                    }
-                    if (micStream) {
-                        micStream.getTracks().forEach(track => track.stop());
-                    }
+                    stopAllStreams();
                 };
                 
+                // 开始录制
                 mediaRecorder.start();
+                
+                // 更新UI状态
                 startBtn.disabled = true;
                 pauseBtn.disabled = false;
                 stopBtn.disabled = false;
+                downloadBtn.disabled = true;
+                
             } catch (error) {
                 console.error('录制错误:', error);
                 alert(`无法开始录制: ${error.message}`);
                 
                 // 重置UI状态
-                startBtn.disabled = false;
-                pauseBtn.disabled = true;
-                resumeBtn.disabled = true;
-                stopBtn.disabled = true;
+                resetUI();
                 
                 // 停止所有流
-                if (stream) {
-                    stream.getTracks().forEach(track => track.stop());
-                }
-                if (micStream) {
-                    micStream.getTracks().forEach(track => track.stop());
-                }
+                stopAllStreams();
             }
         });
 
@@ -137,6 +228,8 @@
 
         stopBtn.addEventListener('click', () => {
             mediaRecorder.stop();
+            
+            // 更新UI状态
             startBtn.disabled = false;
             pauseBtn.disabled = true;
             resumeBtn.disabled = true;
@@ -144,15 +237,58 @@
         });
 
         downloadBtn.addEventListener('click', () => {
-            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            if (recordedChunks.length === 0) return;
+            
+            // 创建视频 blob
+            const mimeType = MediaRecorder.isTypeSupported('video/mp4') 
+                ? 'video/mp4' 
+                : 'video/webm;codecs=vp9,opus';
+            const blob = new Blob(recordedChunks, { type: mimeType });
+            
+            // 创建下载链接
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'recording.webm';
+            
+            // 根据格式设置文件名
+            const extension = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
+            a.download = `recording-${new Date().toISOString().replace(/:/g, '-')}.${extension}`;
+            
+            // 触发下载
             document.body.appendChild(a);
             a.click();
-            document.body.removeChild(a);
+            
+            // 清理
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
         });
+        
+        // 停止所有流的辅助函数
+        function stopAllStreams() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            if (micStream) {
+                micStream.getTracks().forEach(track => track.stop());
+                micStream = null;
+            }
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+        }
+        
+        // 重置UI状态的辅助函数
+        function resetUI() {
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            resumeBtn.disabled = true;
+            stopBtn.disabled = true;
+            downloadBtn.disabled = true;
+        }
     </script>
 </body>
-</html>    
+</html>
