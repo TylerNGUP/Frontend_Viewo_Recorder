@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rec</title>
+    <title>超级屏幕录制工具</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <style>
@@ -141,13 +141,43 @@
             backdrop-filter: blur(10px);
         }
         
-        select {
+        /* 修复播放速度选择器样式 */
+        #playbackSpeed {
             border-radius: 8px;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7);
             color: white;
             border: 1px solid var(--primary);
             padding: 8px 12px;
             box-shadow: 0 0 10px rgba(0, 247, 255, 0.3);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300f7ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+            padding-right: 35px;
+        }
+        
+        #playbackSpeed:hover {
+            box-shadow: 0 0 15px rgba(0, 247, 255, 0.5);
+            border-color: var(--accent);
+        }
+        
+        #playbackSpeed:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(0, 247, 255, 0.7);
+        }
+        
+        #playbackSpeed option {
+            background: rgba(10, 14, 23, 0.9);
+            color: white;
+            padding: 8px;
         }
         
         label {
@@ -319,7 +349,7 @@
     <div id="particles-js"></div>
     
     <div class="app-container">
-        <h1 class="text-4xl neon-text">Rec</h1>
+        <h1 class="text-4xl neon-text">超级屏幕录制工具</h1>
         
         <div class="video-wrapper">
             <div class="video-label">实时预览</div>
@@ -343,7 +373,7 @@
         
         <div class="speed-control glow-border">
             <label for="playbackSpeed" class="text-xl font-medium">播放速度:</label>
-            <select id="playbackSpeed" class="border rounded p-2 bg-white">
+            <select id="playbackSpeed" class="border rounded p-2">
                 <option value="0.5">0.5x</option>
                 <option value="0.75">0.75x</option>
                 <option value="1" selected>1x</option>
