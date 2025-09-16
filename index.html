@@ -529,7 +529,7 @@
                         height: { ideal: 1080 },
                         frameRate: { ideal: 30 }
                     },
-                    audio: true // 补货系统音频
+                    audio: true // 捕获系统音频
                 });
                 
                 // 如果勾选了麦克风，则获取麦克风流
@@ -556,7 +556,7 @@
                     micAudioSource.connect(destination);
 
                     // 替换音频轨道为混合后的音频
-                    combinedStream = new  MediaStream();
+                    combinedStream = new MediaStream();
                     stream.getVideoTracks().forEach(track => combinedStream.addTrack(track));  // 添加视频轨道
                     destination.stream.getAudioTracks().forEach(track => combinedStream.addTrack(track)); // 添加混合音频轨道
 
@@ -574,7 +574,7 @@
                 mediaRecorder = new MediaRecorder(stream, {
                     mimeType: mimeType,
                     videoBitsPerSecond: 5000000, // 5Mbps
-                    audioBitsPerSecond: 128000,  // 128kbps
+                    audioBitsPerSecond: 128000  // 128kbps
                 });
                 
                 // 处理录制数据
