@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Rec</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #00f7ff;
+            --secondary: #ff00d6;
+            --accent: #00ff66;
+            --dark: #0a0e17;
+            --darker: #050811;
+        }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            color: #fff;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .neon-text {
+            text-shadow: 0 0 5px var(--primary), 0 0 10px var(--primary), 0 0 15px var(--primary), 0 0 20px var(--primary);
+            color: #fff;
+        }
+        
+        .glow-border {
+            border: 1px solid rgba(0, 247, 255, 0.3);
+            box-shadow: 0 0 10px rgba(0, 247, 255, 0.5), inset 0 0 10px rgba(0, 247, 255, 0.2);
+        }
+        
+        .video-container {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 25px;
+            width: 100%;
+        }
+        
+        .video-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 12px;
+            padding: 2px;
+            background: linear-gradient(45deg, var(--primary), var(--secondary), var(--accent), var(--primary));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+        
+        video {
+            width: 100%;
+            max-height: 600px;
+            display: block;
+        }
+        
+        .control-panel {
+            margin-top: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            background: rgba(10, 14, 23, 0.7);
+            padding: 20px;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+        }
+        
+        button {
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+            border: none;
+            background: linear-gradient(45deg, rgba(0, 247, 255, 0.2), rgba(255, 0, 214, 0.2));
+            backdrop-filter: blur(5px);
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 0 15px rgba(0, 247, 255, 0.3);
+        }
+        
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        button:hover::before {
+            left: 100%;
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none;
+        }
+        
+        button:not(:disabled):hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 20px rgba(0, 247, 255, 0.5);
+        }
+        
+        #startBtn { background: linear-gradient(45deg, rgba(0, 247, 255, 0.3), rgba(0, 255, 102, 0.3)); }
+        #pauseBtn { background: linear-gradient(45deg, rgba(255, 196, 0, 0.3), rgba(255, 145, 0, 0.3)); }
+        #resumeBtn { background: linear-gradient(45deg, rgba(0, 149, 255, 0.3), rgba(0, 81, 255, 0.3)); }
+        #stopBtn { background: linear-gradient(45deg, rgba(255, 0, 0, 0.3), rgba(255, 0, 106, 0.3)); }
+        #downloadBtn { background: linear-gradient(45deg, rgba(187, 0, 255, 0.3), rgba(106, 0, 255, 0.3)); }
+        
+        .speed-control {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(10, 14, 23, 0.7);
+            padding: 16px 20px;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+        }
+        
+        /* 修复播放速度选择器样式 */
+        #playbackSpeed {
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: 1px solid var(--primary);
+            padding: 8px 12px;
+            box-shadow: 0 0 10px rgba(0, 247, 255, 0.3);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300f7ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+            padding-right: 35px;
+        }
+        
+        #playbackSpeed:hover {
+            box-shadow: 0 0 15px rgba(0, 247, 255, 0.5);
+            border-color: var(--accent);
+        }
+        
+        #playbackSpeed:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(0, 247, 255, 0.7);
+        }
+        
+        #playbackSpeed option {
+            background: rgba(10, 14, 23, 0.9);
+            color: white;
+            padding: 8px;
+        }
+        
+        label {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            text-align: center;
+            position: relative;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+        
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        input[type="checkbox"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            margin-right: 10px;
+            border: 2px solid var(--primary);
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 10px rgba(0, 247, 255, 0.3);
+        }
+        
+        input[type="checkbox"]:checked {
+            background: var(--primary);
+            box-shadow: 0 0 15px var(--primary);
+        }
+        
+        input[type="checkbox"]:checked::before {
+            content: '✓';
+            position: absolute;
+            color: black;
+            font-size: 14px;
+            font-weight: bold;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .video-label {
+            color: white;
+            padding: 6px 15px;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-block;
+            border-radius: 0 0 8px 0;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10;
+        }
+        
+        .pulse {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 0 rgba(0, 255, 102, 0.4);
+            animation: pulse 2s infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 255, 102, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(0, 255, 102, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 255, 102, 0);
+            }
+        }
+        
+        .recording-indicator {
+            display: flex;
+            align-items: center;
+            margin-left: auto;
+            padding: 6px 12px;
+            background: rgba(255, 0, 0, 0.2);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .fullscreen-btn {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid var(--primary);
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+            z-index: 20;
+            transition: all 0.3s ease;
+        }
+        
+        .fullscreen-btn:hover {
+            background: var(--primary);
+            color: black;
+        }
+        
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .video-wrapper {
+            position: relative;
+        }
+        
+        /* 全屏样式 */
+        .video-container.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            border-radius: 0;
+            margin-bottom: 0;
+        }
+        
+        .video-container.fullscreen video {
+            max-height: 100vh;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .video-container.fullscreen::before {
+            display: none;
+        }
+        
+        .video-container.fullscreen .video-label {
+            border-radius: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+    
+    <div class="app-container">
+        <h1 class="text-4xl neon-text">Super Rec</h1>
+        
+        <div class="video-wrapper">
+            <div class="video-label">实时预览</div>
+            <div class="video-container" id="previewContainer">
+                <video id="preview" autoplay muted></video>
+                <button class="fullscreen-btn" onclick="toggleFullscreen('previewContainer')">
+                    <i class="fa fa-arrows-alt"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="video-wrapper">
+            <div class="video-label">录制回放</div>
+            <div class="video-container" id="recordingContainer">
+                <video id="recording" controls></video>
+                <button class="fullscreen-btn" onclick="toggleFullscreen('recordingContainer')">
+                    <i class="fa fa-arrows-alt"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="speed-control glow-border">
+            <label for="playbackSpeed" class="text-xl font-medium">播放速度:</label>
+            <select id="playbackSpeed" class="border rounded p-2">
+                <option value="0.5">0.5x</option>
+                <option value="0.75">0.75x</option>
+                <option value="1" selected>1x</option>
+                <option value="1.25">1.25x</option>
+                <option value="1.5">1.5x</option>
+                <option value="2">2x</option>
+                <option value="3">3x</option>
+            </select>
+        </div>
+        
+        <div class="control-panel glow-border">
+            <button id="startBtn" class="px-5 py-3 rounded flex items-center gap-2">
+                <i class="fa fa-play"></i> 开始录制
+            </button>
+            <button id="pauseBtn" disabled class="px-5 py-3 rounded flex items-center gap-2">
+                <i class="fa fa-pause"></i> 暂停录制
+            </button>
+            <button id="resumeBtn" disabled class="px-5 py-3 rounded flex items-center gap-2">
+                <i class="fa fa-play"></i> 继续录制
+            </button>
+            <button id="stopBtn" disabled class="px-5 py-3 rounded flex items-center gap-2">
+                <i class="fa fa-stop"></i> 停止录制
+            </button>
+            <button id="downloadBtn" disabled class="px-5 py-3 rounded flex items-center gap-2">
+                <i class="fa fa-download"></i> 下载录制
+            </button>
+            
+            <div class="recording-indicator" id="recIndicator" style="display: none;">
+                <div class="pulse"></div>
+                <span>录制中</span>
+            </div>
+            
+            <div class="ml-auto checkbox-wrapper">
+                <label class="flex items-center gap-2 text-lg font-medium cursor-pointer">
+                    <input type="checkbox" id="micCheckbox" checked class="rounded text-blue-500">
+                    录制麦克风声音
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        // 初始化粒子背景
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: "#00f7ff" },
+                shape: { type: "circle" },
+                opacity: { value: 0.5, random: true },
+                size: { value: 3, random: true },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: "#00f7ff",
+                    opacity: 0.4,
+                    width: 1
+                },
+                move: {
+                    enable: true,
+                    speed: 2,
+                    direction: "none",
+                    random: true,
+                    straight: false,
+                    out_mode: "out",
+                    bounce: false
+                }
+            },
+            interactivity: {
+                detect_on: "canvas",
+                events: {
+                    onhover: { enable: true, mode: "repulse" },
+                    onclick: { enable: true, mode: "push" },
+                    resize: true
+                }
+            },
+            retina_detect: true
+        });
+        
+        const preview = document.getElementById('preview');
+        const recording = document.getElementById('recording');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resumeBtn = document.getElementById('resumeBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const micCheckbox = document.getElementById('micCheckbox');
+        const playbackSpeed = document.getElementById('playbackSpeed');
+        const recIndicator = document.getElementById('recIndicator');
+        
+        let mediaRecorder;
+        let recordedChunks = [];
+        let stream;
+        let micStream;
+        let audioContext;
+        
+        // 设置播放速度
+        playbackSpeed.addEventListener('change', () => {
+            recording.playbackRate = parseFloat(playbackSpeed.value);
+        });
+
+        // 全屏功能
+        function toggleFullscreen(containerId) {
+            const container = document.getElementById(containerId);
+            if (!document.fullscreenElement) {
+                container.classList.add('fullscreen');
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                } else if (container.msRequestFullscreen) {
+                    container.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+                container.classList.remove('fullscreen');
+            }
+        }
+
+        // 退出全屏时恢复样式
+        document.addEventListener('fullscreenchange', exitHandler);
+        document.addEventListener('webkitfullscreenchange', exitHandler);
+        document.addEventListener('mozfullscreenchange', exitHandler);
+        document.addEventListener('MSFullscreenChange', exitHandler);
+
+        function exitHandler() {
+            if (!document.fullscreenElement && 
+                !document.webkitFullscreenElement && 
+                !document.mozFullScreenElement &&
+                !document.msFullscreenElement) {
+                document.getElementById('previewContainer').classList.remove('fullscreen');
+                document.getElementById('recordingContainer').classList.remove('fullscreen');
+            }
+        }
+
+        let combinedStream; // 在全局作用域声明 combinedStream
+
+        startBtn.addEventListener('click', async () => {
+            try {
+                // 重置之前的录制数据
+                recordedChunks = [];
+                
+                // 获取屏幕流和麦克风流
+                stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: {
+                        width: { ideal: 1920, max: 3840 },
+                        height: { ideal: 1080, max: 2160 },
+                        frameRate: { ideal: 30, max: 60 }
+                    },
+                    audio: true // 捕获系统音频
+                });
+                
+                // 如果勾选了麦克风，则获取麦克风流
+                if (micCheckbox.checked) {
+                    micStream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            sampleRate: 44100
+                        },
+                        video: false
+                    });
+
+                    // 使用 AudioContext 混合音频轨道
+                    const audioContext = new AudioContext();
+                    const destination = audioContext.createMediaStreamDestination();
+
+                    // 将系统音频添加到 AudioContext;
+                    const systemAudioSource = audioContext.createMediaStreamSource(stream);
+                    systemAudioSource.connect(destination);
+
+                    // 将麦克风音频添加到 AudioContext
+                    const micAudioSource = audioContext.createMediaStreamSource(micStream);
+                    micAudioSource.connect(destination);
+
+                    // 替换音频轨道为混合后的音频
+                    combinedStream = new MediaStream();
+                    stream.getVideoTracks().forEach(track => combinedStream.addTrack(track));  // 添加视频轨道
+                    destination.stream.getAudioTracks().forEach(track => combinedStream.addTrack(track)); // 添加混合音频轨道
+
+                    stream = combinedStream; // 更新流
+                }
+                
+                // 显示预览
+                preview.srcObject = stream;
+
+                // 创建媒体录制器 - 优先使用高效编码格式
+                let mimeType;
+                if (MediaRecorder.isTypeSupported('video/mp4;codecs=h264,aac')) {
+                    mimeType = 'video/mp4;codecs=h264,aac'; // 优先使用H.264+AAC编码
+                } else if (MediaRecorder.isTypeSupported('video/mp4')) {
+                    mimeType = 'video/mp4'; // 回退到基础MP4
+                } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) {
+                    mimeType = 'video/webm;codecs=vp9,opus'; // VP9+Opus是高质量WebM选项
+                } else {
+                    mimeType = 'video/webm;codecs=vp8,opus'; // 基础WebM回退
+                }
+                
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: mimeType,
+                    videoBitsPerSecond: 10000000, // 10Mbps
+                    audioBitsPerSecond: 256000  // 256kbps
+                });
+                
+                // 处理录制数据
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = () => {
+                    // 创建视频 blob
+                    const blob = new Blob(recordedChunks, { type: mimeType });
+                    const videoUrl = URL.createObjectURL(blob);
+                    
+                    // 设置录制视频
+                    recording.src = videoUrl;
+                    recording.onloadedmetadata = () => {
+                        downloadBtn.disabled = false;
+                    };
+                    
+                    // 停止所有流
+                    stopAllStreams();
+                    
+                    // 隐藏录制指示器
+                    recIndicator.style.display = 'none';
+                };
+                
+                // 开始录制
+                mediaRecorder.start();
+                
+                // 更新UI状态
+                startBtn.disabled = true;
+                pauseBtn.disabled = false;
+                stopBtn.disabled = false;
+                downloadBtn.disabled = true;
+                recIndicator.style.display = 'flex';
+                
+            } catch (error) {
+                console.error('录制错误:', error);
+                alert(`无法开始录制: ${error.message}`);
+                
+                // 重置UI状态
+                resetUI();
+                
+                // 停止所有流
+                stopAllStreams();
+                
+                // 隐藏录制指示器
+                recIndicator.style.display = 'none';
+            }
+        });
+
+        pauseBtn.addEventListener('click', () => {
+            mediaRecorder.pause();
+            pauseBtn.disabled = true;
+            resumeBtn.disabled = false;
+            recIndicator.style.display = 'none';
+        });
+
+        resumeBtn.addEventListener('click', () => {
+            mediaRecorder.resume();
+            pauseBtn.disabled = false;
+            resumeBtn.disabled = true;
+            recIndicator.style.display = 'flex';
+        });
+
+        stopBtn.addEventListener('click', () => {
+            mediaRecorder.stop();
+            
+            // 更新UI状态
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            resumeBtn.disabled = true;
+            stopBtn.disabled = true;
+            recIndicator.style.display = 'none';
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            if (recordedChunks.length === 0) return;
+            
+            // 创建视频 blob - 使用与录制相同的编码格式
+            let mimeType;
+            if (MediaRecorder.isTypeSupported('video/mp4;codecs=h264,aac')) {
+                mimeType = 'video/mp4;codecs=h264,aac';
+            } else if (MediaRecorder.isTypeSupported('video/mp4')) {
+                mimeType = 'video/mp4';
+            } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) {
+                mimeType = 'video/webm;codecs=vp9,opus';
+            } else {
+                mimeType = 'video/webm;codecs=vp8,opus';
+            }
+            const blob = new Blob(recordedChunks, { type: mimeType });
+            
+            // 创建下载链接
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            
+            // 根据格式设置文件名
+            const extension = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
+            a.download = `recording-${new Date().toISOString().replace(/:/g, '-')}.${extension}`;
+            
+            // 触发下载
+            document.body.appendChild(a);
+            a.click();
+            
+            // 清理
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+        });
+        
+        // 停止所有流的辅助函数
+        function stopAllStreams() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            if (micStream) {
+                micStream.getTracks().forEach(track => track.stop());
+                micStream = null;
+            }
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+        }
+        
+        // 重置UI状态的辅助函数
+        function resetUI() {
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            resumeBtn.disabled = true;
+            stopBtn.disabled = true;
+            downloadBtn.disabled = true;
+        }
+    </script>
+</body>
+</html>
